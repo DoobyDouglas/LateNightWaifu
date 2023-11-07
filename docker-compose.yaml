@@ -1,0 +1,12 @@
+version: '3'
+services:
+  db:
+    image: postgres:13.0-alpine
+    container_name: db
+    volumes:
+      - database_alchemy:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file: ./.env
+volumes:
+  database_alchemy:
