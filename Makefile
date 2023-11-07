@@ -6,3 +6,6 @@ stop:
 	docker stop db
 migrations:
 	alembic revision --autogenerate -m "migrations"
+
+app:
+	python main.py
