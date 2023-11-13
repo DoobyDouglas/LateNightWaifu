@@ -8,13 +8,15 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
 from data_base.asyncpg_connection import get_user_db
-from data_base.models import User
+from data_base.models import User, Profile
 from const import JWT_SECRET
 from fastapi_users import exceptions, models, schemas
 from typing import Generic
 from overrides import override
 from fastapi import APIRouter
+from sqlalchemy.orm import sessionmaker
 from .auth import get_auth_router
+from data_base.psycopg2_connection import ENGINE
 
 
 class CustomFastAPIUsers(FastAPIUsers, Generic[models.UP, models.ID]):
@@ -36,7 +38,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     verification_token_secret = JWT_SECRET
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
-        print(f"User {user.id} has registered.")
+        with sessionmaker(ENGINE)() as session:
+            session.add(Profile(user_id=user.id))
+            session.commit()
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None
@@ -65,11 +69,11 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             if safe
             else user_create.create_update_dict_superuser()
         )
-        password = user_dict.pop("password")
-        user_dict["hashed_password"] = self.password_helper.hash(password)
-        user_dict["is_active"] = True
-        user_dict["is_superuser"] = False
-        user_dict["is_verified"] = False
+        password = user_dict.pop('password')
+        user_dict['hashed_password'] = self.password_helper.hash(password)
+        user_dict['is_active'] = True
+        user_dict['is_superuser'] = False
+        user_dict['is_verified'] = False
         created_user = await self.user_db.create(user_dict)
         await self.on_after_register(created_user, request)
         return created_user
@@ -85,7 +89,7 @@ async def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=JWT_SECRET, lifetime_seconds=3600)
 
 
-cookie_transport = CookieTransport(cookie_max_age=3600, cookie_name='LateNightWaifu')
+cookie_transport = CookieTransport(cookie_max_age=6669, cookie_name='LateNightWaifu')
 auth_backend = AuthenticationBackend(
     name="jwt",
     transport=cookie_transport,

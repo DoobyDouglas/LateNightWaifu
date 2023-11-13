@@ -9,3 +9,5 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 JWT_SECRET = os.getenv("JWT_SECRET")
+
+POSTERS_FORMATS = ['image/jpeg', 'image/png']
