@@ -3,6 +3,7 @@ from user.schemas import UserCreate, UserRead, UserUpdate
 from user.user import auth_backend, fastapi_users
 from api.routers import ANIME_ROUTER, DIRECTOR_ROUTER
 
+
 LATE_NIGHT_WAIFU = FastAPI()
 
 LATE_NIGHT_WAIFU.include_router(

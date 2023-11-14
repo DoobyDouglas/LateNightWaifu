@@ -23,7 +23,9 @@ class CustomFastAPIUsers(FastAPIUsers, Generic[models.UP, models.ID]):
 
     @override
     def get_auth_router(
-        self, backend: AuthenticationBackend, requires_verification: bool = False
+        self,
+        backend: AuthenticationBackend,
+        requires_verification: bool = False
     ) -> APIRouter:
         return get_auth_router(
             backend,
@@ -37,7 +39,11 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = JWT_SECRET
     verification_token_secret = JWT_SECRET
 
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
+    async def on_after_register(
+            self,
+            user: User,
+            request: Optional[Request] = None
+            ):
         with sessionmaker(ENGINE)() as session:
             session.add(Profile(user_id=user.id))
             session.commit()
@@ -45,12 +51,17 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None
     ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+        print(
+            f"User {user.id} has forgot their password. Reset token: {token}"
+        )
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Optional[Request] = None
     ):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+        print(
+            f"Verification requested for user {user.id}. "
+            f"Verification token: {token}"
+        )
 
     @override
     async def create(
@@ -89,7 +100,10 @@ async def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=JWT_SECRET, lifetime_seconds=3600)
 
 
-cookie_transport = CookieTransport(cookie_max_age=6669, cookie_name='LateNightWaifu')
+cookie_transport = CookieTransport(
+    cookie_max_age=None,
+    cookie_name='LateNightWaifu'
+)
 auth_backend = AuthenticationBackend(
     name="jwt",
     transport=cookie_transport,

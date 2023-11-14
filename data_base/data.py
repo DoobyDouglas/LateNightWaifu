@@ -6,12 +6,14 @@ import os
 from settings import MEDIA_DIR
 import shutil
 from slugify import slugify
-
+from messages import NO_DIRECTOR_ID, NO_GENRE_ID
 
 _ORDER_DICT = {
     None: None,
     'rating_desc': Anime.rating.desc(),
     'rating_asc': Anime.rating.asc(),
+    'release_date_desc': Anime.release_date.desc(),
+    'release_date_asc': Anime.release_date.asc(),
 }
 
 
@@ -44,7 +46,7 @@ class AnimeDB(BaseDB):
         return anime
 
     @classmethod
-    async def add_anime(cls, **kwargs) -> Anime | None:
+    async def post_anime(cls, **kwargs) -> Anime | None:
         with cls._SESSION() as session:
             kwargs['director'] = session.query(Director).where(
                 Director.id == kwargs.pop('director_id')
@@ -52,10 +54,16 @@ class AnimeDB(BaseDB):
             kwargs['genres'] = session.query(Genre).filter(
                 Genre.id.in_(kwargs['genres'])
             ).all()
-            if not kwargs['director'] or not kwargs['genres']:
-                return None
+            if not kwargs['director']:
+                return NO_DIRECTOR_ID
+            elif not kwargs['genres']:
+                return NO_GENRE_ID
             anime = Anime(**kwargs)
             session.add(anime)
+            profile: Profile
+            profile = kwargs['author']
+            count = session.query(Anime).count()
+            profile.contribution += 100 / (count + 1)
             session.commit()
             anime = session.get(Anime, anime.id)
             anime.genres
@@ -67,23 +75,40 @@ class AnimeDB(BaseDB):
         poster: UploadFile
         poster = kwargs['poster']
         anime = await cls.get_anime(kwargs['anime_id'])
+        slug_title = slugify(anime.title)
+        filename = f'poster{os.path.splitext(poster.filename)[-1]}'
+        title_dir = os.path.join(MEDIA_DIR, slug_title)
+        path = os.path.join(title_dir, filename)
+        os.makedirs(title_dir, exist_ok=True)
+        with open(path, 'wb') as file:
+            shutil.copyfileobj(poster.file, file)
+        with cls._SESSION() as session:
+            anime = session.get(Anime, kwargs['anime_id'])
+            anime.poster = path
+            session.commit()
+            anime = session.get(Anime, kwargs['anime_id'])
+            anime.director
+            anime.genres
+        return anime
+
+    @classmethod
+    async def save_video(cls, **kwargs):
+        trailer: UploadFile
+        trailer = kwargs['trailer']
+        anime = await cls.get_anime(kwargs['anime_id'])
         profile = kwargs['profile']
         if anime.author.id == profile.id:
             slug_title = slugify(anime.title)
-            filename = f'{slug_title}{os.path.splitext(poster.filename)[-1]}'
+            filename = f'trailer{os.path.splitext(trailer.filename)[-1]}'
             title_dir = os.path.join(MEDIA_DIR, slug_title)
             path = os.path.join(title_dir, filename)
             os.makedirs(title_dir, exist_ok=True)
             with open(path, 'wb') as file:
-                shutil.copyfileobj(poster.file, file)
+                shutil.copyfileobj(trailer.file, file)
             with cls._SESSION() as session:
                 anime = session.get(Anime, kwargs['anime_id'])
-                anime.poster = path
-                session.commit()
-                anime = session.get(Anime, kwargs['anime_id'])
-                anime.director
-                anime.genres
-            return anime
+                anime.trailer = path
+                session.commit()  # добавить обработку для больших файлов
 
     @classmethod
     async def rate_anime(cls, **kwargs) -> Anime:

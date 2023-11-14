@@ -44,7 +44,7 @@ class Anime(Base):
     genres = relationship(
         'Genre', Anime_Genre.__table__, back_populates='anime_list'
     )
-    date = mapped_column(Date, nullable=False)
+    release_date = mapped_column(Date, nullable=False)
     rating = mapped_column(
         Float, CheckConstraint('rating >= 0 and rating <= 10'), default=0
     )
@@ -53,12 +53,13 @@ class Anime(Base):
         'Profile', Profile_Anime_Rating.__table__, back_populates='rated_anime'
     )
     poster = mapped_column(String(255), nullable=True)
+    trailer = mapped_column(String(255), nullable=True)
     author_id = mapped_column(ForeignKey('Profile.id'))
     author = relationship('Profile', back_populates='posts')
 
     __table_args__ = (
         UniqueConstraint(
-            'title', 'director_id', 'date', name='anime_director'
+            'title', 'director_id', 'release_date', name='anime_director'
         ),
     )
 
@@ -105,5 +106,8 @@ class Profile(Base):
         'Anime', Profile_Anime_Rating.__table__, back_populates='rate_by'
     )
     posts = relationship('Anime', back_populates='author')
+    contribution = mapped_column(
+        Float, CheckConstraint('rating >= 0'), default=0
+    )
 
     __table_args__ = (UniqueConstraint('user_id'),)

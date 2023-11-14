@@ -19,17 +19,18 @@ class Anime(BaseModel):
     id: int
     title: str
     director: Director
-    date: date
+    release_date: date
     genres: list[Genre]
     rating: float
     poster: str | None
+    trailer: str | None
 
 
 class PostAnime(BaseModel):
 
     title: str
     director_id: int
-    date: date
+    release_date: date
     genres: list[int]
 
 

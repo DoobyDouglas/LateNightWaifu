@@ -1,12 +1,42 @@
 version: '3'
 services:
+  redis:
+    image: redis:latest
+    hostname: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_volume:/data
+  worker:
+    build:
+      context: .
+    hostname: worker
+    container_name: worker
+    command: celery -A worker.tasks:worker worker -l info --pool=solo
+    depends_on:
+      - redis
+    volumes:
+      - ./media:/app/media
+  flower:
+    build:
+      context: .
+    hostname: flower
+    container_name: flower
+    command: celery -A worker.tasks:worker flower
+    depends_on:
+      - worker
+    volumes:
+      - ./media:/app/media
   db:
-    image: postgres:13.0-alpine
+    image: postgres:latest
+    hostname: db
     container_name: db
     volumes:
-      - database_alchemy:/var/lib/postgresql/data/
+      - database_volume:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
     env_file: ./.env
 volumes:
-  database_alchemy:
+  database_volume:
+  redis_volume:

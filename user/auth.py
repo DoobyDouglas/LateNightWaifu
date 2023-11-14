@@ -33,7 +33,8 @@ class CustomOAuth2PasswordRequestForm:
             Form(),
             Doc(
                 """
-                `password` string. The OAuth2 spec requires the exact field name
+                `password` string.
+                The OAuth2 spec requires the exact field name
                 `password".
                 """
             ),
@@ -60,12 +61,18 @@ def get_auth_router(
                 "application/json": {
                     "examples": {
                         ErrorCode.LOGIN_BAD_CREDENTIALS: {
-                            "summary": "Bad credentials or the user is inactive.",
-                            "value": {"detail": ErrorCode.LOGIN_BAD_CREDENTIALS},
+                            "summary": (
+                                "Bad credentials or the user is inactive."
+                            ),
+                            "value": {
+                                "detail": ErrorCode.LOGIN_BAD_CREDENTIALS
+                            },
                         },
                         ErrorCode.LOGIN_USER_NOT_VERIFIED: {
                             "summary": "The user is not verified.",
-                            "value": {"detail": ErrorCode.LOGIN_USER_NOT_VERIFIED},
+                            "value": {
+                                "detail": ErrorCode.LOGIN_USER_NOT_VERIFIED
+                            },
                         },
                     }
                 }
@@ -82,8 +89,12 @@ def get_auth_router(
     async def login(
         request: Request,
         credentials: CustomOAuth2PasswordRequestForm = Depends(),
-        user_manager: BaseUserManager[models.UP, models.ID] = Depends(get_user_manager),
-        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
+        user_manager: BaseUserManager[models.UP, models.ID] = Depends(
+            get_user_manager
+        ),
+        strategy: Strategy[models.UP, models.ID] = Depends(
+            backend.get_strategy
+        ),
     ):
         user = await user_manager.authenticate(credentials)
         if user is None or not user.is_active:
@@ -109,11 +120,15 @@ def get_auth_router(
     }
 
     @router.post(
-        "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
+        "/logout",
+        name=f"auth:{backend.name}.logout",
+        responses=logout_responses
     )
     async def logout(
         user_token: Tuple[models.UP, str] = Depends(get_current_user_token),
-        strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
+        strategy: Strategy[models.UP, models.ID] = Depends(
+            backend.get_strategy
+        ),
     ):
         user, token = user_token
         return await backend.logout(strategy, user, token)
