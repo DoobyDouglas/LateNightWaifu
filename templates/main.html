@@ -1,0 +1,12 @@
+<!-- templates/main.html -->
+{% extends "base.html" %}
+{% block title %} 
+LateNightWaifu
+{% endblock %}
+{% block content %}
+<div class="container">
+    {% for anime in anime_list %}
+    {% include "includes/anime_list.html" %}
+    {% endfor %}
+</div>
+{% endblock %}

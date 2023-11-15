@@ -22,6 +22,17 @@ class BaseDB:
     _SESSION = sessionmaker(ENGINE)
 
 
+class ProfileDB(BaseDB):
+
+    @classmethod
+    async def get_profile(cls, user: User) -> Profile:
+        with cls._SESSION() as session:
+            profile = session.query(
+                Profile
+            ).filter(Profile.user_id == user.id).first()
+            return profile
+
+
 class AnimeDB(BaseDB):
 
     @classmethod
@@ -63,7 +74,7 @@ class AnimeDB(BaseDB):
             profile: Profile
             profile = kwargs['author']
             count = session.query(Anime).count()
-            profile.contribution += 100 / (count + 1)
+            profile.contribution += 100 / count
             session.commit()
             anime = session.get(Anime, anime.id)
             anime.genres
@@ -84,12 +95,8 @@ class AnimeDB(BaseDB):
             shutil.copyfileobj(poster.file, file)
         with cls._SESSION() as session:
             anime = session.get(Anime, kwargs['anime_id'])
-            anime.poster = path
+            anime.poster = path.strip(MEDIA_DIR).replace('\\', '/')
             session.commit()
-            anime = session.get(Anime, kwargs['anime_id'])
-            anime.director
-            anime.genres
-        return anime
 
     @classmethod
     async def save_video(cls, **kwargs):
@@ -141,8 +148,8 @@ class DirectorDB(BaseDB):
     @classmethod
     async def get_director_list(cls, **kwargs) -> list[Director]:
         with cls._SESSION() as session:
-            director_list = session.query(Director).order_by(
-                _ORDER_DICT[kwargs['ordering']]
+            director_list = session.query(
+                Director
             ).all()[kwargs['offset']:][:kwargs['limit']]
             for director in director_list:
                 director.anime_list
@@ -158,12 +165,27 @@ class DirectorDB(BaseDB):
         return director
 
 
-class ProfileDB(BaseDB):
+class GenreDB(BaseDB):
 
     @classmethod
-    async def get_profile(cls, user: User) -> Profile:
+    async def get_genre_list(cls, **kwargs) -> list[Genre]:
         with cls._SESSION() as session:
-            profile = session.query(
-                Profile
-            ).filter(Profile.user_id == user.id).first()
-            return profile
+            genre_list = session.query(
+                Genre
+            ).all()[kwargs['offset']:][:kwargs['limit']]
+            for genre in genre_list:
+                genre.anime_list
+        return genre_list
+
+    @classmethod
+    async def add_genre(cls, name) -> Genre:
+        with cls._SESSION() as session:
+            genre = Genre(name=name)
+            session.add(genre)
+            session.commit()
+            genre = session.get(Genre, genre.id)
+        return genre
+
+
+if __name__ == '__main__':
+    pass

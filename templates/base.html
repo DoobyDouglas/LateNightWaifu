@@ -1,0 +1,26 @@
+<!-- templates/base.html -->
+<!DOCTYPE html> 
+<html lang="ru"> 
+  <head>    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <style>
+      body {
+        background: url("static/background.jpeg");
+        background-attachment: fixed;
+      }
+    </style>
+    <title>
+    {% block title %}
+    {% endblock %}
+    </title>
+  </head>
+  <body>
+    <main>
+      <br>    
+      {% block content %}
+      {% endblock %}
+    </main>
+  </body>
+</html>

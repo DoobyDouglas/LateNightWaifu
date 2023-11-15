@@ -1,12 +1,16 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, status
-from fastapi import Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException, status, Depends
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
-from data_base.data import AnimeDB, DirectorDB, ProfileDB
+from data_base.data import AnimeDB, DirectorDB, ProfileDB, GenreDB
 from .schemas import Anime, RatingRequest, PostAnime
 from data_base.models import User
 from user.user import current_active_user
-from const import VALID_IMAGE_EXT
+from settings import (
+    VALID_IMAGE_EXT,
+    API_PREFIX,
+    MAX_UPLOAD_IMAGE_SIZE,
+    MAX_UPLOAD_VIDEO_SIZE,
+)
 from messages import (
     EXISTS,
     SORT_TYPES,
@@ -15,11 +19,16 @@ from messages import (
     NO_GENRES,
     POST_ANIME_HELP,
     BAD_SORT_KEY,
+    BIG_FILESIZE,
 )
 from types import FunctionType
 from threading import Thread
 from worker.tasks import save_video_util
-ANIME_ROUTER = APIRouter(prefix='/anime', tags=['anime'])
+
+
+ANIME_ROUTER = APIRouter(prefix=f'{API_PREFIX}/anime', tags=['anime'])
+DIRECTOR_ROUTER = APIRouter(prefix=f'{API_PREFIX}/director', tags=['director'])
+GENRE_ROUTER = APIRouter(prefix=f'{API_PREFIX}/genre', tags=['genre'])
 
 
 @ANIME_ROUTER.get('/', response_model=list[Anime], description=SORT_TYPES)
@@ -58,6 +67,7 @@ async def post_anime(
         'director_id': anime.director_id,
         'genres': anime.genres,
         'release_date': anime.release_date,
+        'description': anime.description,
         'author': author
     }
     try:
@@ -76,7 +86,7 @@ async def add_anime_media(
         anime_id: int,
         poster: UploadFile = File,
         trailer: UploadFile = File,
-        user: User = Depends(current_active_user)
+        user: User = Depends(current_active_user),
         ):
     profile = await ProfileDB.get_profile(user)
     anime = await AnimeDB.get_anime(anime_id)
@@ -87,17 +97,28 @@ async def add_anime_media(
                     raise HTTPException(
                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, IMAGE_EXT
                     )
+                if poster.size > MAX_UPLOAD_IMAGE_SIZE:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, BIG_FILESIZE
+                    )
                 kwargs = {
                     'anime_id': anime_id,
                     'poster': poster,
                 }
                 await AnimeDB.save_image(**kwargs)
+                anime = await AnimeDB.get_anime(anime_id)
             except AttributeError:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, NOT_EXISTS)
         if not isinstance(trailer, FunctionType):
-            thread = Thread(target=save_video_util, args=(anime.title, anime_id, trailer.filename, trailer))
-            thread.start()
-        anime.trailer = 'Загружается'
+            if trailer.size > MAX_UPLOAD_VIDEO_SIZE:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, BIG_FILESIZE
+                )
+            Thread(
+                target=save_video_util,
+                args=(anime.title, anime_id, trailer.filename, trailer)
+            ).start()
+            anime.trailer = 'Загружается'
         return anime
 
 
@@ -119,30 +140,44 @@ async def rate_anime(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, NOT_EXISTS)
 
 
-DIRECTOR_ROUTER = APIRouter(prefix='/director', tags=['director'])
-
-
-@DIRECTOR_ROUTER.get('/', description=SORT_TYPES)
+@DIRECTOR_ROUTER.get('/')
 async def get_director_list(
     offset: int = 0,
     limit: int = 10,
-    ordering: str = None,
         ):
-    try:
-        kwargs = {
-            'offset': offset,
-            'limit': limit,
-            'ordering': ordering,
-        }
-        return await DirectorDB.get_director_list(**kwargs)
-    except KeyError:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, BAD_SORT_KEY)
+    kwargs = {
+        'offset': offset,
+        'limit': limit,
+    }
+    return await DirectorDB.get_director_list(**kwargs)
+    # сделать обрабокту на возможные ошибки
 
 
 @DIRECTOR_ROUTER.post('/',)
 async def post_director(name: str, user: User = Depends(current_active_user)):
     try:
         return await DirectorDB.add_director(name)
+    except (UniqueViolation, IntegrityError):
+        raise HTTPException(status.HTTP_409_CONFLICT, EXISTS)
+
+
+@GENRE_ROUTER.get('/')
+async def get_genre_list(
+    offset: int = 0,
+    limit: int = 10,
+        ):
+    kwargs = {
+        'offset': offset,
+        'limit': limit,
+    }
+    return await GenreDB.get_genre_list(**kwargs)
+    # сделать обрабокту на возможные ошибки
+
+
+@GENRE_ROUTER.post('/',)
+async def post_genre(name: str, user: User = Depends(current_active_user)):
+    try:
+        return await GenreDB.add_genre(name)
     except (UniqueViolation, IntegrityError):
         raise HTTPException(status.HTTP_409_CONFLICT, EXISTS)
 

@@ -5,7 +5,8 @@ from sqlalchemy import (
     Float,
     CheckConstraint,
     UniqueConstraint,
-    Date
+    Date,
+    Text,
 )
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import mapped_column, relationship
@@ -44,6 +45,7 @@ class Anime(Base):
     genres = relationship(
         'Genre', Anime_Genre.__table__, back_populates='anime_list'
     )
+    description = mapped_column(Text)
     release_date = mapped_column(Date, nullable=False)
     rating = mapped_column(
         Float, CheckConstraint('rating >= 0 and rating <= 10'), default=0

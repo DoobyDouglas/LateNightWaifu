@@ -14,14 +14,12 @@ dist/
 downloads/
 eggs/
 .eggs/
-alembic/
 lib/
 lib64/
 parts/
 sdist/
 var/
 wheels/
-*.media/*
 media/
 share/python-wheels/
 *.egg-info/

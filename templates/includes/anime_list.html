@@ -1,0 +1,24 @@
+<!-- templates/includes/anime_list.html -->
+<div class="row justify-content-center mb-12">
+    <div class="col-md-12">
+        <div style="background-color: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 15px;">
+            <div class="row">
+                <div class="col-md-2">
+                    {% if anime.poster %}
+                    <img src="{{ url_for('media', path=anime.poster) }}" style="max-height: 250px;">
+                    {% endif %}
+                    
+                </div>
+                <div class="col-md-10">
+                    <h2><a href="{{ url_for('anime_page', anime_id=anime.id) }}">{{ anime.title }}</a></h2>
+                    <h3>{{ anime.director.name }}</h3>
+                    <h4>{{ anime.release_date }}</h4>
+                    <h4>{{ anime.description|truncate(300) }}</h4>
+                    <h4>{% for genre in anime.genres %}
+                        {{ genre.name }}{% if not loop.last %},{% endif %}{% endfor %}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br>

@@ -21,6 +21,7 @@ class Anime(BaseModel):
     director: Director
     release_date: date
     genres: list[Genre]
+    description: str
     rating: float
     poster: str | None
     trailer: str | None
@@ -32,6 +33,7 @@ class PostAnime(BaseModel):
     director_id: int
     release_date: date
     genres: list[int]
+    description: str
 
 
 class RatingRequest(BaseModel):
