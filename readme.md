@@ -8,16 +8,3 @@ alembic revision --autogenerate -m "some name"
 alembic upgrade "revision_id"
 
 alembic upgrade head
-
-
-{
-  "username": "dooby",
-  "email": "dooby@mail.com",
-  "password": "dooby"
-}
-
-{
-  "username": "string",
-  "email": "user@example.com",
-  "password": "string"
-}
