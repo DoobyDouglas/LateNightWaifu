@@ -5,9 +5,12 @@ from user.user import auth_backend, fastapi_users
 from api.routers import ANIME_ROUTER, DIRECTOR_ROUTER, GENRE_ROUTER
 from frontend.routers import FRONTEND_ROUTER
 from settings import API_PREFIX
+from logger.logger import LoggingMiddleware
 
 
 LATE_NIGHT_WAIFU = FastAPI()
+
+LATE_NIGHT_WAIFU.add_middleware(LoggingMiddleware)
 
 LATE_NIGHT_WAIFU.mount(
     '/static', StaticFiles(directory='static'), name='static'

@@ -1,6 +1,6 @@
 from .psycopg2_connection import ENGINE
 from .models import Director, Anime, Genre, Profile_Anime_Rating, Profile, User
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload, selectinload
 from fastapi import UploadFile
 import os
 from settings import MEDIA_DIR
@@ -38,22 +38,34 @@ class AnimeDB(BaseDB):
     @classmethod
     async def get_anime_list(cls, **kwargs) -> list[Anime]:
         with cls._SESSION() as session:
-            anime_list = session.query(Anime).order_by(
+            anime_list = session.query(Anime).options(
+                    joinedload(Anime.genres).load_only(
+                        Genre.id, Genre.name
+                    ),
+                    joinedload(Anime.director).load_only(
+                        Director.id, Director.name
+                    ),
+            ).order_by(
                 _ORDER_DICT[kwargs['ordering']]
             ).all()[kwargs['offset']:][:kwargs['limit']]
-            for anime in anime_list:
-                anime.genres
-                anime.director
         return anime_list
 
     @classmethod
     async def get_anime(cls, anime_id: int) -> Anime | None:
         with cls._SESSION() as session:
-            anime = session.get(Anime, anime_id)
-            anime.genres
-            anime.director
-            anime.author
-            anime.poster
+            anime = (
+                session.query(Anime)
+                .filter(Anime.id == anime_id)
+                .options(
+                    joinedload(Anime.genres).load_only(
+                        Genre.id, Genre.name
+                    ),
+                    joinedload(Anime.director).load_only(
+                        Director.id, Director.name
+                    ),
+                )
+                .first()
+            )
         return anime
 
     @classmethod

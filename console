@@ -1,0 +1,8 @@
+2023-11-17 21:45:43.387 | INFO     | api.app:dispatch:14 - Request: GET http://localhost/api/anime/?offset=0&limit=10
+2023-11-17 21:45:43.533 | INFO     | api.app:dispatch:16 - Response: 200
+2023-11-17 21:45:55.424 | INFO     | api.app:dispatch:14 - Request: GET http://localhost/api/anime/?offset=0&limit=10
+2023-11-17 21:45:55.432 | INFO     | api.app:dispatch:16 - Response: 200
+2023-11-17 21:46:39.382 | INFO     | api.app:dispatch:14 - Request: GET http://localhost/api/anime/?offset=0&limit=10
+2023-11-17 21:46:39.390 | INFO     | api.app:dispatch:16 - Response: 200
+2023-11-17 21:47:02.943 | INFO     | api.app:dispatch:14 - Request: GET http://localhost/api/anime/?offset=0&limit=10
+2023-11-17 21:47:02.988 | INFO     | api.app:dispatch:16 - Response !!!!!!!!!!!!!!!!!!!!!: 200

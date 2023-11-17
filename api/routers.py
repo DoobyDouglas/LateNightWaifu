@@ -24,7 +24,8 @@ from messages import (
 from types import FunctionType
 from threading import Thread
 from worker.tasks import save_video_util
-
+from fastapi.exceptions import ResponseValidationError
+from anyio import EndOfStream
 
 ANIME_ROUTER = APIRouter(prefix=f'{API_PREFIX}/anime', tags=['anime'])
 DIRECTOR_ROUTER = APIRouter(prefix=f'{API_PREFIX}/director', tags=['director'])
@@ -51,8 +52,11 @@ async def get_anime_list(
 @ANIME_ROUTER.get('/{anime_id}', response_model=Anime)
 async def get_anime(anime_id: int):
     try:
-        return await AnimeDB.get_anime(anime_id)
-    except AttributeError:
+        anime = await AnimeDB.get_anime(anime_id)
+        if not anime:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, NOT_EXISTS)
+        return anime
+    except (AttributeError, ResponseValidationError, EndOfStream):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, NOT_EXISTS)
 
 

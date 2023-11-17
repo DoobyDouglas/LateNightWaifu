@@ -50,6 +50,7 @@ services:
     volumes:
       - static_volume:/app/static/
       - media_volume:/app/media/
+      - ./:/app
     depends_on:
       - db
     command: bash -c "python main.py"
