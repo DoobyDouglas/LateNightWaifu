@@ -3,13 +3,30 @@
 <html lang="ru"> 
   <head>    
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.css') }}">
+    <script src="{{ url_for('static', path='js/search.js') }}" defer></script>
     <style>
       body {
-        background: url("static/background.jpeg");
+        background: url({{ url_for('static', path='image/background.jpeg') }});
         background-attachment: fixed;
+        margin-top: 100px;
       }
+      header {
+          position: fixed;
+          width: 100%;
+          top: 0;
+          z-index: 1000;
+      }
+      .left_menu {
+        position: fixed;
+        left: 0;
+        top: 17.5%; 
+        transform: translateY(-50%);
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 10px;
+    }
     </style>
     <title>
     {% block title %}
@@ -17,8 +34,10 @@
     </title>
   </head>
   <body>
+    {% include "includes/header.html" %}
     <main>
-      <br>    
+      <br>
+      {% include "includes/left_menu.html" %}    
       {% block content %}
       {% endblock %}
     </main>

@@ -144,6 +144,11 @@ async def rate_anime(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, NOT_EXISTS)
 
 
+@ANIME_ROUTER.get('/search/{query}', response_model=list[Anime])
+async def search_anime(query: str):
+    return await AnimeDB.search_anime(query)
+
+
 @DIRECTOR_ROUTER.get('/')
 async def get_director_list(
     offset: int = 0,

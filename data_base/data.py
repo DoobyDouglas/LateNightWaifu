@@ -1,6 +1,7 @@
 from .psycopg2_connection import ENGINE
 from .models import Director, Anime, Genre, Profile_Anime_Rating, Profile, User
-from sqlalchemy.orm import sessionmaker, joinedload, selectinload
+from sqlalchemy.orm import sessionmaker, joinedload
+from sqlalchemy import func
 from fastapi import UploadFile
 import os
 from settings import MEDIA_DIR
@@ -62,6 +63,9 @@ class AnimeDB(BaseDB):
                     ),
                     joinedload(Anime.director).load_only(
                         Director.id, Director.name
+                    ),
+                    joinedload(Anime.author).load_only(
+                        Profile.id,
                     ),
                 )
                 .first()
@@ -153,6 +157,23 @@ class AnimeDB(BaseDB):
             anime.genres
             anime.director
         return anime
+
+    @classmethod
+    async def search_anime(cls, query: str) -> list[Anime] | None:
+        with cls._SESSION() as session:
+            query = session.query(
+                Anime
+            ).filter(func.lower(Anime.title).like(
+                f'%{query.lower()}%')
+            ).options(
+                    joinedload(Anime.genres).load_only(
+                        Genre.id, Genre.name
+                    ),
+                    joinedload(Anime.director).load_only(
+                        Director.id, Director.name
+                    ),
+                ).all()
+        return query
 
 
 class DirectorDB(BaseDB):

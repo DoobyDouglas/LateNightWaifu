@@ -16,8 +16,7 @@ logger.add(
     level='INFO',
     colorize=True,
     format=(
-        '<green>{time:YYYY-MM-DD HH:mm:ss}</green> '
-        '| <cyan>{level: <8}</cyan> | <level>{message}</level>'
+        '<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <green>{level}</green>'
     )
 )
 
